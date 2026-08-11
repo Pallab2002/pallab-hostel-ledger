@@ -1,0 +1,51 @@
+name: Add header-to-actions spacing
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  spacing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Add spacing after ledger header
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('app.py')
+          s = p.read_text(encoding='utf-8')
+          old = '''    unsafe_allow_html=True\n)\n\na1,a2,a3,a4,a5 = st.columns([1.05,1.05,1.05,1.05,.45], gap="large")'''
+          new = '''    unsafe_allow_html=True\n)\n\n# Extra breathing room between the Ledger header and the main action buttons.\nst.markdown('<div class="header-actions-gap"></div>', unsafe_allow_html=True)\n\na1,a2,a3,a4,a5 = st.columns([1.05,1.05,1.05,1.05,.45], gap="large")'''
+          if old not in s:
+              raise SystemExit('Target header block not found')
+          s = s.replace(old, new, 1)
+
+          css_old = '''.hero-sub{font-size:12px;color:#9ba7bb;margin-top:5px}'''
+          css_new = '''.hero-sub{font-size:12px;color:#9ba7bb;margin-top:5px}\n.header-actions-gap{height:22px;width:100%;}'''
+          if css_old not in s:
+              raise SystemExit('Target CSS block not found')
+          s = s.replace(css_old, css_new, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit change
+        run: |
+          git config user.name "Pallab Sarkar"
+          git config user.email "89120698+Pallab2002@users.noreply.github.com"
+          git add app.py
+          git diff --cached --quiet && exit 0
+          git commit -m "Add spacing below ledger header"
+          git push
+
+      - name: Remove temporary workflow
+        if: success()
+        run: |
+          git rm .github/workflows/header-spacing.yml
+          git commit -m "Remove temporary header spacing workflow"
+          git push
