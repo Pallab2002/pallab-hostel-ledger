@@ -363,20 +363,54 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 
-/* ---------- Streamlit layout safety ---------- */
+/* ---------- Streamlit layout safety + generous spacing ---------- */
 [data-testid="stHorizontalBlock"]{
-  width:100%!important;max-width:100%!important;box-sizing:border-box!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  gap:18px!important;
+  align-items:stretch!important;
+  margin-bottom:18px!important;
 }
 [data-testid="stHorizontalBlock"] > [data-testid="column"]{
-  min-width:0!important;max-width:100%!important;box-sizing:border-box!important;
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  flex:1 1 0!important;
+  width:0!important;
 }
 [data-testid="stHorizontalBlock"] > [data-testid="column"] > div{
-  max-width:100%!important;box-sizing:border-box!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
 }
 [data-testid="stHorizontalBlock"] button,
 [data-testid="stHorizontalBlock"] .card,
 [data-testid="stHorizontalBlock"] .metric{
-  max-width:100%!important;box-sizing:border-box!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+[data-testid="stHorizontalBlock"] + [data-testid="stHorizontalBlock"]{
+  margin-top:6px!important;
+}
+
+/* Extra separation between major cards and sections. */
+.card{margin-bottom:18px!important;}
+.metric{margin-bottom:4px!important;}
+
+/* Keep calendar columns compact while still separated. */
+.day{width:100%!important;box-sizing:border-box!important;}
+
+/* Mobile: enough gap without making the page horizontally scroll. */
+@media(max-width:700px){
+  [data-testid="stHorizontalBlock"]{
+    gap:8px!important;
+    margin-bottom:12px!important;
+  }
+  .card{margin-bottom:12px!important;}
 }
 </style>
 """, unsafe_allow_html=True)
@@ -403,7 +437,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-a1,a2,a3,a4,a5 = st.columns([1.15,1.15,1.15,1.15,.45])
+a1,a2,a3,a4,a5 = st.columns([1.05,1.05,1.05,1.05,.45], gap="medium")
 with a1:
     if st.button("＋ Meal", use_container_width=True, type="primary"):
         st.session_state.meal_open = True
@@ -428,7 +462,7 @@ with a4:
 with a5:
     st.button("🌙", use_container_width=True, help="Dark theme")
 
-c1,c2,c3,c4 = st.columns([1,1.25,1,1])
+c1,c2,c3,c4 = st.columns([1,1.25,1,1], gap="medium")
 with c1:
     if st.button("‹ Previous", use_container_width=True):
         if mo == 1: y,mo = y-1,12
@@ -487,7 +521,7 @@ metrics = [
     ("🍛 Mess Meals", cnt["mm"] + cnt["mn"], "purple"),
     ("☕ Canteen Counts", cnt["cm"] + cnt["ce"], "orange"),
 ]
-cols = st.columns(4)
+cols = st.columns(4, gap="medium")
 for col,(label,value,colour) in zip(cols,metrics):
     with col:
         st.markdown(
@@ -499,7 +533,7 @@ for col,(label,value,colour) in zip(cols,metrics):
 # -----------------------------
 # Account cards
 # -----------------------------
-a,b = st.columns(2)
+a,b = st.columns(2, gap="large")
 with a:
     st.markdown(
         f'<div class="card account-mess"><div class="section-title">🍛 Mess — selected month</div>'
@@ -527,7 +561,7 @@ st.markdown(
 )
 
 week = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
-head = st.columns(7)
+head = st.columns(7, gap="small")
 for col,name in zip(head,week):
     with col:
         st.markdown(f'<div class="dow">{name}</div>', unsafe_allow_html=True)
@@ -539,7 +573,7 @@ while len(cells) % 7:
     cells.append(None)
 
 for start in range(0,len(cells),7):
-    cols = st.columns(7)
+    cols = st.columns(7, gap="small")
     for col,day_num in zip(cols,cells[start:start+7]):
         with col:
             if day_num is None:
@@ -571,7 +605,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 # -----------------------------
 # Monthly counts
 # -----------------------------
-m1,m2 = st.columns(2)
+m1,m2 = st.columns(2, gap="large")
 with m1:
     st.markdown(
         f'<div class="card"><div class="section-title">🍛 Mess — this month</div>'
@@ -592,7 +626,7 @@ with m2:
 # -----------------------------
 # Deposits + summary
 # -----------------------------
-d1,d2 = st.columns([1.2,.8])
+d1,d2 = st.columns([1.2,.8], gap="large")
 with d1:
     st.markdown(
         f'<div class="card"><div class="section-title">💳 Deposits — {month_label(y,mo)}</div>'
