@@ -309,6 +309,26 @@ button[kind="primary"],div[data-testid="stButton"] button[kind="primary"]{
 input,textarea,[data-baseweb="select"]>div{
   background:#101722!important;color:#edf2ff!important;border-color:#303b50!important
 }
+/* Fix BaseWeb select text visibility in popup forms. */
+[data-testid="stDialog"] [data-baseweb="select"] > div{
+  background:#101722!important;color:#edf2ff!important;border-color:#303b50!important;
+}
+[data-testid="stDialog"] [data-baseweb="select"] span,
+[data-testid="stDialog"] [data-baseweb="select"] input,
+[data-testid="stDialog"] [data-baseweb="select"] [data-baseweb="input"]{
+  color:#edf2ff!important;
+  -webkit-text-fill-color:#edf2ff!important;
+  opacity:1!important;
+}
+[data-testid="stDialog"] [data-baseweb="select"] svg{
+  fill:#edf2ff!important;color:#edf2ff!important;
+}
+[data-baseweb="popover"] [role="option"]{
+  color:#edf2ff!important;background:#121927!important;
+}
+[data-baseweb="popover"] [role="option"]:hover{
+  background:#202a3d!important;color:#fff!important;
+}
 [data-testid="stForm"]{
   background:#121927;border:1px solid #2b364a;border-radius:18px;padding:15px
 }
@@ -808,8 +828,10 @@ def money_dialog():
         with f1:
             account = st.selectbox(
                 "Account",
-                ["mess","canteen"],
-                index=0 if acc == "mess" else 1
+                ["mess", "canteen"],
+                index=0 if acc == "mess" else 1,
+                format_func=lambda x: "🍛 Mess" if x == "mess" else "☕ Canteen",
+                key="money_account_select"
             )
         with f2:
             selected_date = st.date_input(
