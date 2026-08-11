@@ -1,0 +1,83 @@
+name: Fix Streamlit UI layout
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply layout fix
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path("app.py")
+          s = p.read_text(encoding="utf-8")
+
+          old_block = '.block-container{max-width:1240px;padding:1rem 1.1rem 2rem}'
+          new_block = '''.block-container{
+            width:100%;max-width:1240px;padding:1rem 1rem 2rem;
+            margin:0 auto;box-sizing:border-box
+          }'''
+          if old_block not in s:
+              raise SystemExit("Expected block-container CSS was not found")
+          s = s.replace(old_block, new_block, 1)
+
+          old_gap = '''/* Less vertical whitespace throughout the app. */
+          [data-testid="stVerticalBlock"] { gap: .45rem; }
+          [data-testid="stHorizontalBlock"] { gap: .55rem; }'''
+          new_gap = '''/* ---------- Streamlit layout safety ---------- */
+          [data-testid="stHorizontalBlock"]{
+            width:100%!important;max-width:100%!important;box-sizing:border-box!important;
+          }
+          [data-testid="stHorizontalBlock"] > [data-testid="column"]{
+            min-width:0!important;max-width:100%!important;box-sizing:border-box!important;
+          }
+          [data-testid="stHorizontalBlock"] > [data-testid="column"] > div{
+            max-width:100%!important;box-sizing:border-box!important;
+          }
+          [data-testid="stHorizontalBlock"] button,
+          [data-testid="stHorizontalBlock"] .card,
+          [data-testid="stHorizontalBlock"] .metric{
+            max-width:100%!important;box-sizing:border-box!important;
+          }'''
+          if old_gap not in s:
+              raise SystemExit("Expected global Streamlit gap CSS was not found")
+          s = s.replace(old_gap, new_gap, 1)
+
+          if 'a1,a2,a3,a4,a5 = st.columns([1,1,1,1,1])' not in s:
+              raise SystemExit("Expected action columns were not found")
+          s = s.replace(
+              'a1,a2,a3,a4,a5 = st.columns([1,1,1,1,1])',
+              'a1,a2,a3,a4,a5 = st.columns([1.15,1.15,1.15,1.15,.45])',
+              1,
+          )
+
+          if 'c1,c2,c3,c4 = st.columns([1,1.4,1,1])' not in s:
+              raise SystemExit("Expected navigation columns were not found")
+          s = s.replace(
+              'c1,c2,c3,c4 = st.columns([1,1.4,1,1])',
+              'c1,c2,c3,c4 = st.columns([1,1.25,1,1])',
+              1,
+          )
+
+          p.write_text(s, encoding="utf-8")
+          print("UI layout fixes applied")
+          PY
+
+      - name: Commit fixed app.py and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.py
+          git rm .github/workflows/fix-ui.yml
+          git commit -m "Fix Streamlit tile overflow and responsive layout" || exit 0
+          git push
