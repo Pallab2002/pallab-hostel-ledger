@@ -22,18 +22,21 @@ st.set_page_config(
 # Database — Supabase PostgreSQL
 # -----------------------------
 def db():
-    """Connect to Supabase using the Session Pooler URL stored in Streamlit Secrets."""
+    """Connect to Supabase PostgreSQL using Streamlit Secrets."""
     try:
-        db_url = st.secrets["SUPABASE_DB_URL"]
-    except Exception:
-        st.error(
-            "Supabase connection is not configured. Add SUPABASE_DB_URL "
-            "to Streamlit Cloud → Settings → Secrets."
+        return psycopg2.connect(
+            host=st.secrets["SUPABASE_HOST"],
+            port=int(st.secrets["SUPABASE_PORT"]),
+            database=st.secrets["SUPABASE_DATABASE"],
+            user=st.secrets["SUPABASE_USER"],
+            password=st.secrets["SUPABASE_PASSWORD"],
+            cursor_factory=RealDictCursor,
+            connect_timeout=10,
+            sslmode="require",
         )
+    except Exception as e:
+        st.error("Unable to connect to Supabase database.")
         st.stop()
-
-    return psycopg2.connect(db_url, cursor_factory=RealDictCursor)
-
 def init_db():
     con = db()
     try:
