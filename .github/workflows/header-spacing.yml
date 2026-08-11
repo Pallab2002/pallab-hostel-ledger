@@ -1,7 +1,8 @@
 name: Add header-to-actions spacing
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
   contents: write
