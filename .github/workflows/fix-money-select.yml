@@ -9,7 +9,6 @@ permissions:
 
 jobs:
   fix:
-    if: github.event.head_commit.message == 'Trigger selector fix'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,6 +21,10 @@ jobs:
           p = Path('app.py')
           s = p.read_text(encoding='utf-8')
 
+          if 'key="money_account_select"' in s:
+              print('Selector fix already present; nothing to do.')
+              raise SystemExit(0)
+
           old_css = '''input,textarea,[data-baseweb="select"]>div{\n  background:#101722!important;color:#edf2ff!important;border-color:#303b50!important\n}'''
           new_css = '''input,textarea,[data-baseweb="select"]>div{\n  background:#101722!important;color:#edf2ff!important;border-color:#303b50!important\n}\n/* Fix BaseWeb select text visibility in popup forms. */\n[data-testid="stDialog"] [data-baseweb="select"] > div{\n  background:#101722!important;color:#edf2ff!important;border-color:#303b50!important;\n}\n[data-testid="stDialog"] [data-baseweb="select"] span,\n[data-testid="stDialog"] [data-baseweb="select"] input,\n[data-testid="stDialog"] [data-baseweb="select"] [data-baseweb="input"]{\n  color:#edf2ff!important;\n  -webkit-text-fill-color:#edf2ff!important;\n  opacity:1!important;\n}\n[data-testid="stDialog"] [data-baseweb="select"] svg{\n  fill:#edf2ff!important;color:#edf2ff!important;\n}\n[data-baseweb="popover"] [role="option"]{\n  color:#edf2ff!important;background:#121927!important;\n}\n[data-baseweb="popover"] [role="option"]:hover{\n  background:#202a3d!important;color:#fff!important;\n}'''
           if old_css not in s:
@@ -33,7 +36,6 @@ jobs:
           if old_select not in s:
               raise SystemExit('Selectbox target not found')
           s = s.replace(old_select, new_select, 1)
-
           p.write_text(s, encoding='utf-8')
           PY
 
@@ -42,11 +44,13 @@ jobs:
           git config user.name "Pallab Sarkar"
           git config user.email "89120698+Pallab2002@users.noreply.github.com"
           git add app.py
+          if git diff --cached --quiet; then exit 0; fi
           git commit -m "Fix Add Money account selector display"
           git push
 
       - name: Remove temporary workflow
+        if: always()
         run: |
-          git rm -f .github/workflows/fix-money-select.yml
-          git commit -m "Remove temporary selector fix workflow"
-          git push
+          git rm -f .github/workflows/fix-money-select.yml || true
+          git commit -m "Remove temporary selector fix workflow" || true
+          git push || true
