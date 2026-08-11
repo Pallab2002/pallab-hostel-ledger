@@ -10,7 +10,7 @@ from psycopg2.extras import RealDictCursor
 # ============================================================
 
 st.set_page_config(
-    page_title="Pallab's Hostel Ledger",
+    page_title="Pallab's Hostel Ledger 1",
     page_icon="🍽️",
     layout="wide",
     initial_sidebar_state="collapsed",
