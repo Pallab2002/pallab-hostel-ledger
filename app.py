@@ -90,7 +90,7 @@ init_db_once()
 # -----------------------------
 # Cached reads
 # -----------------------------
-@st.cache_data(ttl=15, show_spinner=False)
+@st.cache_data(ttl=60, show_spinner=False)
 def load_month(month_key):
     con = db()
     with con.cursor() as cur:
@@ -323,6 +323,46 @@ input,textarea,[data-baseweb="select"]>div{
 }
 
 .dialog-note{color:#8f9bb0;font-size:12px}
+
+/* ---------- Clean compact UI ---------- */
+.hero-sub:empty { display:none; }
+.muted:empty { display:none; }
+
+[data-testid="stDialog"] [data-testid="stVerticalBlock"] {
+    gap: .55rem;
+}
+[data-testid="stDialog"] .stCaption {
+    display:none;
+}
+[data-testid="stDialog"] label {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+}
+[data-testid="stDialog"] input {
+    min-height: 42px !important;
+}
+[data-testid="stDialog"] button {
+    min-height: 42px !important;
+}
+
+/* Make text/amount fields visually clean and fast to use. */
+.clean-input input {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Hide native number spinners if any remain. */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Less vertical whitespace throughout the app. */
+[data-testid="stVerticalBlock"] { gap: .45rem; }
+[data-testid="stHorizontalBlock"] { gap: .55rem; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -344,8 +384,7 @@ mk = month_key(y, mo)
 # -----------------------------
 st.markdown(
     '<div class="hero"><div class="hero-title">🍽️ Pallab\'s Hostel Ledger</div>'
-    '<div class="hero-sub">Shared hostel account · monthly records · fast Supabase database '
-    '<span class="live">● LIVE</span></div></div>',
+    '<div class="hero-sub"><span class="live">● LIVE</span></div></div>',
     unsafe_allow_html=True
 )
 
@@ -417,8 +456,7 @@ meal_by_date = {str(r["date"]): r for r in meals}
 opening_html = (
     f'<div class="card" style="margin-top:14px">'
     f'<div style="display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap">'
-    f'<div><div class="section-title">💰 Opening Balance — {month_label(y,mo)}</div>'
-    f'<div class="muted">Manual opening balance for this month · included in available balance.</div></div>'
+    f'<div><div class="section-title">💰 Opening Balance — {month_label(y,mo)}</div></div>'
     f'<div><span class="chip">🍛 Mess <b class="purple">{money(month["mess_opening"])}</b></span>'
     f'<span class="chip">☕ Canteen <b class="teal">{money(month["canteen_opening"])}</b></span></div>'
     f'</div></div>'
@@ -469,9 +507,7 @@ with b:
 # -----------------------------
 st.markdown(
     f'<div class="card" style="margin-top:14px">'
-    f'<div class="section-title">📅 Daily Meals</div>'
-    f'<div class="muted">Click Edit on a date to add or edit meal counts for {month_label(y,mo)}. '
-    f'No meal price is used.</div>',
+    f'<div class="section-title">📅 Daily Meals</div>',
     unsafe_allow_html=True
 )
 
@@ -545,7 +581,7 @@ d1,d2 = st.columns([1.2,.8])
 with d1:
     st.markdown(
         f'<div class="card"><div class="section-title">💳 Deposits — {month_label(y,mo)}</div>'
-        f'<div class="muted">Only deposits for the selected month are shown.</div></div>',
+        f'</div>',
         unsafe_allow_html=True
     )
     if deposits:
@@ -595,22 +631,19 @@ with d2:
 
 @st.dialog("💰 Opening Balance")
 def opening_dialog():
-    st.caption(f"Set the opening balances for {month_label(y,mo)}.")
     with st.form("opening_dialog_form"):
         o1,o2 = st.columns(2)
         with o1:
-            om = st.number_input(
-                "🍛 Mess Opening Balance (₹)",
-                min_value=0.0,
-                value=float(month["mess_opening"]),
-                step=1.0
+            om_raw = st.text_input(
+                "🍛 Mess Opening (₹)",
+                value=f"{float(month['mess_opening']):.0f}",
+                key="opening_mess_input"
             )
         with o2:
-            oc = st.number_input(
-                "☕ Canteen Opening Balance (₹)",
-                min_value=0.0,
-                value=float(month["canteen_opening"]),
-                step=1.0
+            oc_raw = st.text_input(
+                "☕ Canteen Opening (₹)",
+                value=f"{float(month['canteen_opening']):.0f}",
+                key="opening_canteen_input"
             )
 
         b1,b2 = st.columns(2)
@@ -627,9 +660,17 @@ def opening_dialog():
             )
 
         if save:
-            set_opening(mk, om, oc)
-            st.session_state.opening_open = False
-            st.rerun()
+            try:
+                om = float(om_raw.replace(",", "").strip() or "0")
+                oc = float(oc_raw.replace(",", "").strip() or "0")
+                if om < 0 or oc < 0:
+                    raise ValueError
+            except ValueError:
+                st.error("Enter valid non-negative amounts.")
+            else:
+                set_opening(mk, om, oc)
+                st.session_state.opening_open = False
+                st.rerun()
 
         if cancel:
             st.session_state.opening_open = False
@@ -641,7 +682,6 @@ def meal_dialog():
     ds = st.session_state.get("meal_date", today.isoformat())
     existing = meal_by_date.get(ds)
 
-    st.caption(f"Add or edit the meal record for {ds}.")
     with st.form("meal_dialog_form"):
         f1,f2 = st.columns(2)
         with f1:
@@ -710,7 +750,6 @@ def money_dialog():
     acc = st.session_state.get("money_account", "mess")
     ds = st.session_state.get("money_date", today.isoformat())
 
-    st.caption(f"Add a deposit to the {acc.title()} account.")
     with st.form("money_dialog_form"):
         f1,f2 = st.columns(2)
         with f1:
@@ -727,11 +766,11 @@ def money_dialog():
 
         f3,f4 = st.columns(2)
         with f3:
-            amount = st.number_input(
+            amount_raw = st.text_input(
                 "Amount (₹)",
-                min_value=0.0,
-                step=10.0,
-                value=0.0
+                value="",
+                placeholder="e.g. 1000",
+                key="money_amount_input"
             )
         with f4:
             note = st.text_input(
@@ -753,6 +792,10 @@ def money_dialog():
             )
 
         if save:
+            try:
+                amount = float(amount_raw.replace(",", "").strip() or "0")
+            except ValueError:
+                amount = 0
             if amount <= 0:
                 st.error("Enter a valid amount.")
             elif selected_date.strftime("%Y-%m") != mk:
