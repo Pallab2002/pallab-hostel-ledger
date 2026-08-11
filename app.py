@@ -437,7 +437,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-a1,a2,a3,a4,a5 = st.columns([1.05,1.05,1.05,1.05,.45], gap="medium")
+a1,a2,a3,a4,a5 = st.columns([1.05,1.05,1.05,1.05,.45], gap="large")
 with a1:
     if st.button("＋ Meal", use_container_width=True, type="primary"):
         st.session_state.meal_open = True
