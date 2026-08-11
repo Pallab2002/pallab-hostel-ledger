@@ -243,7 +243,10 @@ html,body,[class*="css"]{
     linear-gradient(145deg,#080c14,#0e1521 55%,#080c13);
   color:var(--text);
 }
-.block-container{max-width:1240px;padding:1rem 1.1rem 2rem}
+.block-container{
+  width:100%;max-width:1240px;padding:1rem 1rem 2rem;
+  margin:0 auto;box-sizing:border-box
+}
 [data-testid="stHeader"]{background:transparent}
 [data-testid="stToolbar"]{display:none}
 .hero{
@@ -360,9 +363,21 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 
-/* Less vertical whitespace throughout the app. */
-[data-testid="stVerticalBlock"] { gap: .45rem; }
-[data-testid="stHorizontalBlock"] { gap: .55rem; }
+/* ---------- Streamlit layout safety ---------- */
+[data-testid="stHorizontalBlock"]{
+  width:100%!important;max-width:100%!important;box-sizing:border-box!important;
+}
+[data-testid="stHorizontalBlock"] > [data-testid="column"]{
+  min-width:0!important;max-width:100%!important;box-sizing:border-box!important;
+}
+[data-testid="stHorizontalBlock"] > [data-testid="column"] > div{
+  max-width:100%!important;box-sizing:border-box!important;
+}
+[data-testid="stHorizontalBlock"] button,
+[data-testid="stHorizontalBlock"] .card,
+[data-testid="stHorizontalBlock"] .metric{
+  max-width:100%!important;box-sizing:border-box!important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -388,7 +403,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-a1,a2,a3,a4,a5 = st.columns([1,1,1,1,1])
+a1,a2,a3,a4,a5 = st.columns([1.15,1.15,1.15,1.15,.45])
 with a1:
     if st.button("＋ Meal", use_container_width=True, type="primary"):
         st.session_state.meal_open = True
@@ -413,7 +428,7 @@ with a4:
 with a5:
     st.button("🌙", use_container_width=True, help="Dark theme")
 
-c1,c2,c3,c4 = st.columns([1,1.4,1,1])
+c1,c2,c3,c4 = st.columns([1,1.25,1,1])
 with c1:
     if st.button("‹ Previous", use_container_width=True):
         if mo == 1: y,mo = y-1,12
