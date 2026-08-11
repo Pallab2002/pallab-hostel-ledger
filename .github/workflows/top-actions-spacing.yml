@@ -1,0 +1,39 @@
+name: Increase top action button spacing
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  spacing:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Increase only top action row gap
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('app.py')
+          s = p.read_text(encoding='utf-8')
+          old = 'a1,a2,a3,a4,a5 = st.columns([1.05,1.05,1.05,1.05,.45], gap="medium")'
+          new = 'a1,a2,a3,a4,a5 = st.columns([1.05,1.05,1.05,1.05,.45], gap="large")'
+          if old not in s:
+              raise SystemExit('Target top action row not found; refusing to modify unrelated layout.')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Commit app.py and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.py
+          git commit -m "Increase spacing between top action buttons" || true
+          git push
+          rm -f .github/workflows/top-actions-spacing.yml
+          git add .github/workflows/top-actions-spacing.yml
+          git commit -m "Remove temporary spacing workflow" || true
+          git push || true
