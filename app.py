@@ -260,6 +260,7 @@ html,body,[class*="css"]{
 }
 .hero-title{font-size:30px;font-weight:900;letter-spacing:-.8px}
 .hero-sub{font-size:12px;color:#9ba7bb;margin-top:5px}
+.header-actions-gap{height:22px;width:100%;}
 .live{display:inline-block;margin-left:6px;padding:3px 8px;border-radius:99px;
 background:rgba(32,196,174,.14);color:#6de2d1;font-weight:800}
 .card{
@@ -436,6 +437,9 @@ st.markdown(
     '<div class="hero-sub"><span class="live">● LIVE</span></div></div>',
     unsafe_allow_html=True
 )
+
+# Extra breathing room between the Ledger header and the main action buttons.
+st.markdown('<div class="header-actions-gap"></div>', unsafe_allow_html=True)
 
 a1,a2,a3,a4,a5 = st.columns([1.05,1.05,1.05,1.05,.45], gap="large")
 with a1:
