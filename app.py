@@ -34,8 +34,10 @@ def db():
             connect_timeout=10,
             sslmode="require",
         )
+
     except Exception as e:
-        st.error("Unable to connect to Supabase database.")
+        st.error(f"Supabase connection failed: {type(e).__name__}")
+        st.code(str(e).replace(st.secrets.get("SUPABASE_PASSWORD", ""), "***"))
         st.stop()
 def init_db():
     con = db()
